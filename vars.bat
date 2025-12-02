@@ -5,7 +5,7 @@ set UE5_DIR=C:\Program Files\Epic Games\UE_5.5
 set ROOTDIR=%~dp0
 set ROOTDIR=%ROOTDIR:~0,-1%
 
-set PROJECT=HexGrids
+set PROJECT=HexGrid
 set PROJECT_DIR=%ROOTDIR%
 set PROJECT_BIN_DIR=%ROOTDIR%\Binaries\Win64
 set UPROJECT_PATH=%PROJECT_DIR%\%PROJECT%.uproject
