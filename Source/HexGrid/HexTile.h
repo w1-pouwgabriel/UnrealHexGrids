@@ -41,6 +41,8 @@ public:
     UFUNCTION()
     void OnEndMouseOver(UPrimitiveComponent* TouchedComp);
 
+    void NotifyActorOnClicked(FKey ButtonPressed) override;
+
 protected:
     virtual void BeginPlay() override;
 

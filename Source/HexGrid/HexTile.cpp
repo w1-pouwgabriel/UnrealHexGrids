@@ -1,6 +1,9 @@
 #include "HexTile.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include <GameFramework/Character.h>
+#include <NavigationTestingActor.h>
+#include <Engine/NavigationObjectBase.h>
 
 AHexTile::AHexTile()
 {
@@ -9,12 +12,16 @@ AHexTile::AHexTile()
     HexMesh = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("HexMesh"));
     RootComponent = HexMesh;
 
-    HexMesh->SetCollisionProfileName(TEXT("BlockAll"));
-    HexMesh->SetGenerateOverlapEvents(true);
+    HexMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+    HexMesh->SetCollisionObjectType(ECC_WorldStatic);
 
-    // Enable mouse interaction
-    HexMesh->SetNotifyRigidBodyCollision(true);
+    HexMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
     HexMesh->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+    HexMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+
+    // IMPORTANT
+    HexMesh->bUseComplexAsSimpleCollision = true;
+
 }
 
 void AHexTile::BeginPlay()
@@ -77,7 +84,18 @@ void AHexTile::GenerateHexMesh()
     for (int i = 0; i < Vertices.Num(); ++i)
         UV0.Add(FVector2D(0.5f, 0.5f));
 
-    HexMesh->CreateMeshSection_LinearColor(0, Vertices, Triangles, Normals, UV0, VertexColors, Tangents, true);
+    HexMesh->CreateMeshSection_LinearColor(
+        0,
+        Vertices,
+        Triangles,
+        Normals,
+        UV0,
+        VertexColors,
+        Tangents,
+        true // <-- enables collision for this section
+    );
+
+    HexMesh->ContainsPhysicsTriMeshData(true);
 }
 
 void AHexTile::OnClicked(AActor* TouchedActor, FKey ButtonPressed)
@@ -85,6 +103,12 @@ void AHexTile::OnClicked(AActor* TouchedActor, FKey ButtonPressed)
     bIsSelected = !bIsSelected;
     // Update material color here (green/red/etc)
     UE_LOG(LogTemp, Warning, TEXT("Tile clicked at Q=%d R=%d"), GridCoord.Q, GridCoord.R);
+}
+
+void AHexTile::NotifyActorOnClicked(FKey ButtonPressed)
+{
+    Super::NotifyActorOnClicked(ButtonPressed);
+    GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, FString(GetName()));
 }
 
 void AHexTile::OnBeginMouseOver(UPrimitiveComponent* TouchedComp)
