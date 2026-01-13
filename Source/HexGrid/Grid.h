@@ -27,7 +27,9 @@ public:
     // Called every frame
     virtual void Tick(float DeltaTime) override;
 
-    // Grid properties (edit in Blueprint Details panel)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid")
+    bool bCenterGrid = true;
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid")
     int32 GridWidth = 10;
 

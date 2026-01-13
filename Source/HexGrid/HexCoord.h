@@ -42,7 +42,7 @@ struct HEXGRID_API FHexCoord
 };
 
 // Needed for hash containers like TMap and TSet
-//		https://en.cppreference.com/w/cpp/language/adl.html (used to find the )
+//		https://en.cppreference.com/w/cpp/language/adl.html
 FORCEINLINE uint32 GetTypeHash(const FHexCoord& C)
 {
 	return HashCombine(::GetTypeHash(C.Q), ::GetTypeHash(C.R));

@@ -40,11 +40,8 @@ void AHexTile::GenerateHexMesh()
     TArray<FProcMeshTangent> Tangents;
     TArray<FLinearColor> VertexColors;
 
-    // Flat-top hexagon vertices (Red Blob Games convention)
-    // Center at (0,0,0), outer radius = HexSize
     const float outerRadius = HexFlatToFlat * (2.0f / FMath::Sqrt(3.0f));  // = × 1.1547
 
-    // Optional debug log - add this temporarily
     UE_LOG(LogTemp, Log, TEXT("HexTile %s - FlatToFlat: %.1f   OuterRadius: %.3f"),
         *GridCoord.ToString(), HexFlatToFlat, outerRadius);
 
@@ -52,7 +49,7 @@ void AHexTile::GenerateHexMesh()
     const float AngleStep = 60.0f;
     for (int i = 0; i < 6; ++i)
     {
-        float AngleDeg = 0.0f + (float)i * AngleStep;  // 0° start!
+        float AngleDeg = 0.0f + (float)i * AngleStep;
         float AngleRad = FMath::DegreesToRadians(AngleDeg);
 
         float X = (HexFlatToFlat * FMath::Cos(AngleRad)) * shrink; 

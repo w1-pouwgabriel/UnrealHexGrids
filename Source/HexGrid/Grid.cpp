@@ -20,16 +20,27 @@ void AGrid::BeginPlay()
 
     Tiles.Empty();
 
+    FVector CenterOffset = FVector::ZeroVector;
+    if (bCenterGrid) {
+        float midQ = (GridWidth - 1) * 0.5f;
+        float midR = (GridHeight - 1) * 0.5f;
+        FHexCoord midCoord(FMath::RoundToInt(midQ), FMath::RoundToInt(midR));
+        CenterOffset = -HexToWorldLocation(midCoord);
+    }
+
     int32 SpawnedCount = 0;
 
-    for (int32 q = 0; q < GridWidth; ++q)
+    for (int32 col = 0; col < GridWidth; col++)
     {
-        for (int32 r = 0; r < GridHeight; ++r)
+        for (int32 row = 0; row < GridHeight; row++)
         {
+            int32 q = col;
+            int32 r = row;
+
             FHexCoord Coord(q, r);
 
-            // Calculate LOCAL position relative to the Grid actor
             FVector LocalLocation = HexToWorldLocation(Coord);
+            FVector SpawnLoc = GetActorLocation() + LocalLocation + CenterOffset;
 
             // Spawn as child attached to THIS Grid actor
             FActorSpawnParameters SpawnParams;
@@ -39,7 +50,7 @@ void AGrid::BeginPlay()
 
             AHexTile* NewTile = GetWorld()->SpawnActor<AHexTile>(
                 HexTileClass,
-                GetActorLocation() + LocalLocation,       // World = Grid Location + Local Offset
+                SpawnLoc,       // World = Grid Location + Local Offset
                 GetActorRotation(),
                 SpawnParams
             );
@@ -80,8 +91,8 @@ AHexTile* AGrid::GetTileAtCoord(const FHexCoord& Coord) const
 
 FVector AGrid::HexToWorldLocation(const FHexCoord& Coord) const
 {
-    float x = HexFlatToFlat * (FMath::Sqrt(3.0f) * Coord.Q + FMath::Sqrt(3.0f) / 2.0f * Coord.R);
-    float y = HexFlatToFlat * (3.0f / 2.0f * Coord.R);
+    float x = HexFlatToFlat * 1.5f * Coord.Q;  // 3/2 * outer
+    float y = HexFlatToFlat * FMath::Sqrt(3.0f) * (Coord.R + 0.5f * (Coord.Q % 2));  // offset every other column
     return FVector(x, y, 0.0f);
 }
 
