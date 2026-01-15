@@ -17,5 +17,6 @@ class HEXGRID_API AMyPlayerController : public APlayerController
 public:
 	void SetupInputComponent() override;
 
-	
+	void OnLeftClick();
+	void OnRightClick();
 };

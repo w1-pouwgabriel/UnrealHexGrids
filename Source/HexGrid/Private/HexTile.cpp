@@ -4,6 +4,7 @@
 #include <GameFramework/Character.h>
 #include <NavigationTestingActor.h>
 #include <Engine/NavigationObjectBase.h>
+#include "Components/TextRenderComponent.h"
 
 AHexTile::AHexTile()
 {
@@ -22,19 +23,44 @@ AHexTile::AHexTile()
     // IMPORTANT
     HexMesh->bUseComplexAsSimpleCollision = true;
 
+    DebugText = CreateDefaultSubobject<UTextRenderComponent>(TEXT("DebugText"));
+    DebugText->SetupAttachment(RootComponent);
+    DebugText->SetRelativeLocation(FVector(0.0f, 0.0f, DebugTextZOffset));
+    DebugText->SetRelativeRotation(FRotator(90.f, 90.f, 0.0f));
+    DebugText->SetWorldSize(DebugTextWorldSize);
+    DebugText->SetTextRenderColor(DebugTextColor);
+    DebugText->SetHorizontalAlignment(EHorizTextAligment::EHTA_Center);
+    DebugText->SetVerticalAlignment(EVerticalTextAligment::EVRTA_TextCenter);
+    //DebugText->bAlwaysIncludeOnDrawInGame = true;  // Visible in PIE
+
 }
 
 void AHexTile::BeginPlay()
 {
     Super::BeginPlay();
-
     GenerateHexMesh();
 
     if (BaseMaterial)
     {
-        UMaterialInstanceDynamic* DynMat = UMaterialInstanceDynamic::Create(BaseMaterial, this);
-        HexMesh->SetMaterial(0, DynMat);
-        // Example: DynMat->SetVectorParameterValue(TEXT("BaseColor"), FLinearColor::Red);
+        HighlightMaterial = UMaterialInstanceDynamic::Create(BaseMaterial, this);
+        HexMesh->SetMaterial(0, HighlightMaterial);
+        HighlightMaterial->SetVectorParameterValue(TEXT("BaseColor"), NormalColor);
+    }
+}
+
+void AHexTile::SetTileHighlight(FLinearColor NewColor)
+{
+    if (HighlightMaterial)
+    {
+        HighlightMaterial->SetVectorParameterValue(TEXT("BaseColor"), NewColor);
+    }
+}
+
+void AHexTile::ResetHighlight()
+{
+    if (HighlightMaterial)
+    {
+        HighlightMaterial->SetVectorParameterValue(TEXT("BaseColor"), NormalColor);
     }
 }
 
@@ -47,7 +73,7 @@ void AHexTile::GenerateHexMesh()
     TArray<FProcMeshTangent> Tangents;
     TArray<FLinearColor> VertexColors;
 
-    const float outerRadius = HexFlatToFlat * (2.0f / FMath::Sqrt(3.0f));  // = × 1.1547
+    const float outerRadius = HexFlatToFlat * (2.0f / FMath::Sqrt(3.0f));  // = x 1.1547
 
     UE_LOG(LogTemp, Log, TEXT("HexTile %s - FlatToFlat: %.1f   OuterRadius: %.3f"),
         *GridCoord.ToString(), HexFlatToFlat, outerRadius);
@@ -56,7 +82,7 @@ void AHexTile::GenerateHexMesh()
     const float AngleStep = 60.0f;
     for (int i = 0; i < 6; ++i)
     {
-        float AngleDeg = 0.0f + (float)i * AngleStep;
+        float AngleDeg = 30.0f + (float)i * AngleStep;
         float AngleRad = FMath::DegreesToRadians(AngleDeg);
 
         float X = (HexFlatToFlat * FMath::Cos(AngleRad)) * shrink; 
@@ -71,9 +97,9 @@ void AHexTile::GenerateHexMesh()
     // Triangulate (6 triangles from center)
     for (int i = 0; i < 6; ++i)
     {
-        Triangles.Add(6);                    // center
-        Triangles.Add((i + 1) % 6);          // next (swapped)
-        Triangles.Add(i);                    // current
+        Triangles.Add(6);               // center
+        Triangles.Add((i + 1) % 6);     // next (swapped)
+        Triangles.Add(i);               // current
     }
 
     // Normals (all up)
@@ -96,6 +122,16 @@ void AHexTile::GenerateHexMesh()
     );
 
     HexMesh->ContainsPhysicsTriMeshData(true);
+}
+
+void AHexTile::UpdateDebugTextFromCoord()
+{
+    if (DebugText)
+    {
+        int32 S = GridCoord.S();
+        FString CoordStr = FString::Printf(TEXT("Q:%d\nR:%d\nS:%d"), GridCoord.Q, GridCoord.R, S);
+        DebugText->SetText(FText::FromString(CoordStr));
+    }
 }
 
 void AHexTile::OnClicked(AActor* TouchedActor, FKey ButtonPressed)
